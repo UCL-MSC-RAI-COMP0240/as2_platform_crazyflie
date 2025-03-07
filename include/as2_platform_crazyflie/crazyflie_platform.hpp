@@ -87,6 +87,7 @@
 #include "sensor_msgs/msg/nav_sat_fix.hpp"
 #include "sensor_msgs/msg/nav_sat_status.hpp"
 #include "std_msgs/msg/bool.hpp"
+#include "std_msgs/msg/color_rgba.hpp"
 
 struct logBattery
 {
@@ -129,6 +130,7 @@ public:
   void onLogRange(uint32_t time_in_ms, std::vector<double> * values, void * /*userData*/);
   void updateOdom();
   void externalOdomCB(const geometry_msgs::msg::PoseStamped::SharedPtr msg);
+  void updateLightRingCB(const std_msgs::msg::ColorRGBA::SharedPtr msg);
 
   /*  --  AUX FUNCTIONS --  */
 
@@ -144,6 +146,7 @@ private:
   uint8_t controller_type_;
   uint8_t estimator_type_;
   bool enable_multiranger_;
+  bool enable_led_ring_;
 
   // rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr stop_sub_;
 
@@ -186,6 +189,10 @@ private:
   double range_buff_[6];
   std::function<void(uint32_t, std::vector<double> *, void *)> cb_range_;
   std::shared_ptr<LogBlockGeneric> range_logBlock_;
+
+  // Led Deck
+  std::string led_deck_topic_;
+  rclcpp::Subscription<std_msgs::msg::ColorRGBA>::SharedPtr led_deck_sub_;
 };
 
 #endif  // AS2_PLATFORM_CRAZYFLIE__CRAZYFLIE_PLATFORM_HPP_

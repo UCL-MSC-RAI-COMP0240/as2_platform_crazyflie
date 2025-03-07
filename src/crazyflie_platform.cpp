@@ -82,6 +82,11 @@ void CrazyfliePlatform::init()
   this->declare_parameter<bool>("multi_ranger_deck", false);  // Availability of multi-ranger deck
   this->get_parameter("multi_ranger_deck", enable_multiranger_);
 
+  this->declare_parameter<bool>("led_deck", false);  // Availability of led-ring-deck
+  this->get_parameter("led_deck", enable_led_ring_);
+  this->declare_parameter<std::string>("led_deck_topic", "leds/control");
+  this->get_parameter("led_deck_topic", led_deck_topic_);
+
   configureSensors();
   /*    SET-UP    */
   do {
@@ -159,6 +164,13 @@ void CrazyfliePlatform::init()
 
     range_logBlock_ = std::make_shared<LogBlockGeneric>(cf_.get(), vars_range, nullptr, cb_range_);
     range_logBlock_->start(10);
+  }
+
+  if (enable_led_ring_) {
+    this->led_deck_sub_ = this->create_subscription<std_msgs::msg::ColorRGBA>(led_deck_topic_, 10, 
+                  std::bind(&CrazyfliePlatform::updateLightRingCB, this, std::placeholders::_1));
+    cf_->setParamByName<uint8_t>("ring", "effect", 7);  // Calibrated Effect Mode
+    RCLCPP_INFO(this->get_logger(), "Subscribed to led deck control topic %s", led_deck_topic_.c_str());
   }
 
   // External estimation
@@ -577,6 +589,13 @@ void CrazyfliePlatform::externalOdomCB(const geometry_msgs::msg::PoseStamped::Sh
   } catch (tf2::TransformException & ex) {
     RCLCPP_WARN(this->get_logger(), "Could not transform external odom: %s", ex.what());
   }
+}
+
+void CrazyfliePlatform::updateLightRingCB(const std_msgs::msg::ColorRGBA::SharedPtr msg)
+{
+  cf_->setParamByName<uint8_t>("ring", "solidRed", (uint8_t) msg->r * 255);  // Calibrated Effect Mode
+  cf_->setParamByName<uint8_t>("ring", "solidGreen", (uint8_t) msg->g * 255);  // Calibrated Effect Mode
+  cf_->setParamByName<uint8_t>("ring", "solidBlue", (uint8_t) msg->b * 255);  // Calibrated Effect Mode
 }
 
 Eigen::Vector3d CrazyfliePlatform::quaternion2Euler(geometry_msgs::msg::Quaternion quat)
