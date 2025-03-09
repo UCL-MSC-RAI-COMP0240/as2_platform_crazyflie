@@ -193,6 +193,9 @@ private:
   // Led Deck
   std::string led_deck_topic_;
   rclcpp::Subscription<std_msgs::msg::ColorRGBA>::SharedPtr led_deck_sub_;
+
+  // Loco Deck
+  // uint8_t loco_mode_;
 };
 
 #endif  // AS2_PLATFORM_CRAZYFLIE__CRAZYFLIE_PLATFORM_HPP_

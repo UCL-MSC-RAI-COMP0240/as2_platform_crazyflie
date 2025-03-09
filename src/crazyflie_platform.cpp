@@ -87,6 +87,9 @@ void CrazyfliePlatform::init()
   this->declare_parameter<std::string>("led_deck_topic", "leds/control");
   this->get_parameter("led_deck_topic", led_deck_topic_);
 
+  // this->declare_parameter<uint8_t>("loco_mode", 3);  // Availability of led-ring-deck
+  // this->get_parameter("loco_mode", loco_mode_);
+
   configureSensors();
   /*    SET-UP    */
   do {
@@ -187,6 +190,9 @@ void CrazyfliePlatform::init()
       std::bind(&CrazyfliePlatform::externalOdomCB, this, std::placeholders::_1));
     RCLCPP_DEBUG(this->get_logger(), "Subscribed to external odom topic!");
   }
+
+  // If using Loco
+  // cf_->setParamByName<uint8_t>("loco", "mode", loco_mode_);  // Calibrated Effect Mode
 
   /*  TIMERS */
   ping_timer_ = this->create_timer(std::chrono::milliseconds(10), [this]() {pingCB();});
@@ -449,7 +455,7 @@ bool CrazyfliePlatform::ownSendCommand()
     cf_->sendPositionSetpoint(x, y, z, yaw);
 
   } else if (platform_control_mode.control_mode == as2_msgs::msg::ControlMode::UNSET) {
-    cf_->sendStop();  // Not really needed, will stop anyway if no command is set.
+    // cf_->sendStop();  // Not really needed, will stop anyway if no command is set.
     //
     // TODO(fixme): ATTITUDE Mode
     /* } else if (platform_control_mode.control_mode == as2_msgs::msg::ControlMode::ATTITUDE)
@@ -593,6 +599,7 @@ void CrazyfliePlatform::externalOdomCB(const geometry_msgs::msg::PoseStamped::Sh
 
 void CrazyfliePlatform::updateLightRingCB(const std_msgs::msg::ColorRGBA::SharedPtr msg)
 {
+  RCLCPP_INFO(this->get_logger(), "Received Light Change Request to (%f, %f, %f)", msg->r, msg->g, msg->b);
   cf_->setParamByName<uint8_t>("ring", "solidRed", (uint8_t) msg->r * 255);  // Calibrated Effect Mode
   cf_->setParamByName<uint8_t>("ring", "solidGreen", (uint8_t) msg->g * 255);  // Calibrated Effect Mode
   cf_->setParamByName<uint8_t>("ring", "solidBlue", (uint8_t) msg->b * 255);  // Calibrated Effect Mode
